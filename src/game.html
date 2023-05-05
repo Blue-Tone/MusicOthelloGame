@@ -54,6 +54,7 @@
 
         // 1. Initialize the board
         function createBoard() {
+            console.log('createBoard() called');
             for (let i = 0; i < boardSize; i++) {
                 const row = document.createElement('div');
                 row.classList.add('row');
@@ -75,6 +76,7 @@
 
         // 2. Game logic
         function handleClick(event) {
+            console.log('handleClick() called');
             const cell = event.target;
             const row = parseInt(cell.dataset.row);
             const col = parseInt(cell.dataset.col);
@@ -96,78 +98,81 @@
         const secondsPerBeat = 60 / bpm;
         const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
         const oscillatorTypes = ['sine', 'square', 'sawtooth', 'triangle'];
+        let currentColumn = 0;
 
         function playSound() {
+            console.log('playSound() called');
             for (let i = 0; i < boardSize; i++) {
                 const row = boardElement.children[i];
+                const cell = row.children[currentColumn];
+                const stone = cell.querySelector('.white, .black');
 
-                for (let j = 0; j < boardSize; j++) {
-                    const cell = row.children[j];
-                    const stone = cell.querySelector('.white, .black');
-
-                    if (stone) {
-                        const isWhite = stone.classList.contains('white');
-                        const note = notes[i];
-                        const oscillatorType = isWhite ? oscillatorTypes[j % oscillatorTypes.length]
-                        : 'percussion';
-                        playNote(note, oscillatorType);
-                    }
-                 }
+                if (stone) {
+                    const isWhite = stone.classList.contains('white');
+                    const note = notes[i];
+                    const oscillatorType = isWhite ? oscillatorTypes[currentColumn % oscillatorTypes.length] : 'percussion';
+                    playNote(note, oscillatorType);
+                }
             }
+        // Move to the next column
+        currentColumn = (currentColumn + 1) % boardSize;
 
-            // Schedule the next playback
-            setTimeout(playSound, secondsPerBeat * 1000);
+        // Schedule the next playback
+        setTimeout(playSound, secondsPerBeat * 1000);
+    }
+
+    function playNote(note, oscillatorType) {
+        console.log('playNote() called');
+        const frequency = noteToFrequency(note);
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+
+        if (oscillatorType === 'percussion') {
+            // Create percussion sound
+            oscillator.type = 'white';
+            gainNode.gain.setValueAtTime(1, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
+        } else {
+            // Create melodic sound
+            oscillator.type = oscillatorType;
+            gainNode.gain.setValueAtTime(0.5, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1);
         }
 
-        function playNote(note, oscillatorType) {
-            const frequency = noteToFrequency(note);
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + 1);
+    }
 
-            if (oscillatorType === 'percussion') {
-                // Create percussion sound
-                oscillator.type = 'white';
-                gainNode.gain.setValueAtTime(1, context.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
-            } else {
-                // Create melodic sound
-                oscillator.type = oscillatorType;
-                gainNode.gain.setValueAtTime(0.5, context.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1);
-            }
+    function noteToFrequency(note) {
+        console.log('noteToFrequency() called');
+        const octave = parseInt(note.slice(-1));
+        const keyNumber = note.slice(0, -1);
+        const keyNumbers = {
+            'C': 1,
+            'C#': 2,
+            'D': 3,
+            'D#': 4,
+            'E': 5,
+            'F': 6,
+            'F#': 7,
+            'G': 8,
+            'G#': 9,
+            'A': 10,
+            'A#': 11,
+            'B': 12
+        };
 
-            oscillator.frequency.value = frequency;
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-            oscillator.start(context.currentTime);
-            oscillator.stop(context.currentTime + 1);
-        }
+        const semiTonesFromA4 = 12 * (octave - 4) + keyNumbers[keyNumber] - 10;
+        const frequency = 440 * Math.pow(2, semiTonesFromA4 / 12);
+        return frequency;
+    }
 
-        function noteToFrequency(note) {
-            const octave = parseInt(note.slice(-1));
-            const keyNumber = note.slice(0, -1);
-            const keyNumbers = {
-                'C': 1,
-                'C#': 2,
-                'D': 3,
-                'D#': 4,
-                'E': 5,
-                'F': 6,
-                'F#': 7,
-                'G': 8,
-                'G#': 9,
-                'A': 10,
-                'A#': 11,
-                'B': 12
-            };
-
-            const semiTonesFromA4 = 12 * (octave - 4) + keyNumbers[keyNumber] - 10;
-            const frequency = 440 * Math.pow(2, semiTonesFromA4 / 12);
-            return frequency;
-        }
-
-        // Start the playback loop
-        playSound();
-    </script>
+    // Start the playback loop
+    playSound();
+</script>
 </body>
 </html>
+
