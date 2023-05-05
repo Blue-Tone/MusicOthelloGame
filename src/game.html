@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Othello Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #board {
+            display: inline-block;
+            border: 1px solid black;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .black, .white {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .black {
+            background-color: black;
+        }
+
+        .white {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Music Othello Game</h1>
+    <div id="board"></div>
+    <script>
+        const boardSize = 8;
+        const boardElement = document.getElementById('board');
+        let currentPlayer = 'black';
+
+        // 1. Initialize the board
+        function createBoard() {
+            for (let i = 0; i < boardSize; i++) {
+                const row = document.createElement('div');
+                row.classList.add('row');
+
+                for (let j = 0; j < boardSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener('click', handleClick);
+                    row.appendChild(cell);
+                }
+
+                boardElement.appendChild(row);
+            }
+        }
+
+        createBoard();
+
+        // 2. Game logic
+        function handleClick(event) {
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            // Check if the cell is empty
+            if (!cell.classList.contains('black') && !cell.classList.contains('white')) {
+                // Place the stone
+                const stone = document.createElement('div');
+                stone.classList.add(currentPlayer);
+                cell.appendChild(stone);
+
+                // Switch the current player
+                currentPlayer = (currentPlayer === 'black') ? 'white' : 'black';
+            }
+
+            // Add your game logic here.
+            // For example, change the cell color and play the sound based on the row and col.
+            // Use the Web Audio API or the HTML5 Audio Element to play the sounds.
+        }
+    </script>
+</body>
+</html>
