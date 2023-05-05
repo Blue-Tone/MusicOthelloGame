@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,7 +50,7 @@
     <script>
         const boardSize = 8;
         const boardElement = document.getElementById('board');
-        let currentPlayer = 'black';
+        let currentPlayer = 'white';
 
         // 1. Initialize the board
         function createBoard() {
@@ -80,21 +79,95 @@
             const row = parseInt(cell.dataset.row);
             const col = parseInt(cell.dataset.col);
 
-            // Check if the cell is empty
-            if (!cell.classList.contains('black') && !cell.classList.contains('white')) {
-                // Place the stone
+            // Place the stone on the board
+            if (!cell.querySelector('.white, .black')) {
                 const stone = document.createElement('div');
                 stone.classList.add(currentPlayer);
                 cell.appendChild(stone);
 
-                // Switch the current player
-                currentPlayer = (currentPlayer === 'black') ? 'white' : 'black';
+                // Toggle the current player
+                currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+            }
+        }
+
+        // 3. Sound playback
+        const context = new AudioContext();
+        const bpm = 120;
+        const secondsPerBeat = 60 / bpm;
+        const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+        const oscillatorTypes = ['sine', 'square', 'sawtooth', 'triangle'];
+
+        function playSound() {
+            for (let i = 0; i < boardSize; i++) {
+                const row = boardElement.children[i];
+
+                for (let j = 0; j < boardSize; j++) {
+                    const cell = row.children[j];
+                    const stone = cell.querySelector('.white, .black');
+
+                    if (stone) {
+                        const isWhite = stone.classList.contains('white');
+                        const note = notes[i];
+                        const oscillatorType = isWhite ? oscillatorTypes[j % oscillatorTypes.length]
+                        : 'percussion';
+                        playNote(note, oscillatorType);
+                    }
+                 }
             }
 
-            // Add your game logic here.
-            // For example, change the cell color and play the sound based on the row and col.
-            // Use the Web Audio API or the HTML5 Audio Element to play the sounds.
+            // Schedule the next playback
+            setTimeout(playSound, secondsPerBeat * 1000);
         }
+
+        function playNote(note, oscillatorType) {
+            const frequency = noteToFrequency(note);
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            if (oscillatorType === 'percussion') {
+                // Create percussion sound
+                oscillator.type = 'white';
+                gainNode.gain.setValueAtTime(1, context.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
+            } else {
+                // Create melodic sound
+                oscillator.type = oscillatorType;
+                gainNode.gain.setValueAtTime(0.5, context.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1);
+            }
+
+            oscillator.frequency.value = frequency;
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+            oscillator.start(context.currentTime);
+            oscillator.stop(context.currentTime + 1);
+        }
+
+        function noteToFrequency(note) {
+            const octave = parseInt(note.slice(-1));
+            const keyNumber = note.slice(0, -1);
+            const keyNumbers = {
+                'C': 1,
+                'C#': 2,
+                'D': 3,
+                'D#': 4,
+                'E': 5,
+                'F': 6,
+                'F#': 7,
+                'G': 8,
+                'G#': 9,
+                'A': 10,
+                'A#': 11,
+                'B': 12
+            };
+
+            const semiTonesFromA4 = 12 * (octave - 4) + keyNumbers[keyNumber] - 10;
+            const frequency = 440 * Math.pow(2, semiTonesFromA4 / 12);
+            return frequency;
+        }
+
+        // Start the playback loop
+        playSound();
     </script>
 </body>
 </html>
